@@ -133,8 +133,8 @@ instead of every engineer running playbooks from their own laptop.
   <line x1="450" y1="288" x2="450" y2="315" stroke="#bbb" stroke-width="1.5"/>
   <path d="M 240 288 L 240 310 L 714 310 L 714 315" fill="none" stroke="#3e8635" stroke-width="2" marker-end="url(#pg)"/>
   <text x="477" y="302" text-anchor="middle" fill="#3e8635" font-weight="bold" font-size="12">controller sends jobs to the execution nodes (receptor mesh)</text>
-  <line x1="700" y1="388" x2="530" y2="440" stroke="#555" stroke-width="2" marker-end="url(#pa)"/>
-  <text x="662" y="428" fill="#6a6e73" font-size="12">SSH / APIs</text>
+  <path d="M 720 388 L 720 414 L 450 414 L 450 434" fill="none" stroke="#555" stroke-width="2" marker-end="url(#pa)"/>
+  <text x="590" y="407" fill="#6a6e73" font-size="12">SSH / APIs</text>
 </svg>
 <div class="diagcap">Every request enters through the gateway; the controller pushes work out to execution nodes, which touch the managed machines.</div></div>
 <h3>Each component, described</h3>
@@ -291,8 +291,8 @@ instead of every engineer running playbooks from their own laptop.
 
   <line x1="202" y1="150" x2="255" y2="150" stroke="#555" stroke-width="2" marker-end="url(#dg)"/>
   <line x1="452" y1="150" x2="485" y2="150" stroke="#555" stroke-width="2" marker-end="url(#dg)"/>
-  <line x1="700" y1="118" x2="742" y2="88" stroke="#3e8635" stroke-width="2.5" marker-end="url(#dok)"/>
-  <line x1="700" y1="182" x2="742" y2="214" stroke="#ee0000" stroke-width="2.5" marker-end="url(#dno)"/>
+  <line x1="700" y1="118" x2="750" y2="82" stroke="#3e8635" stroke-width="2.5" marker-end="url(#dok)"/>
+  <line x1="700" y1="182" x2="750" y2="220" stroke="#ee0000" stroke-width="2.5" marker-end="url(#dno)"/>
   <text x="40" y="260" fill="#6a6e73">The same flow guards EVERY page and API call — view, run, edit, create, delete.</text>
 </svg>
 <div class="diagcap">How the platform decides every single request.</div></div>
@@ -397,14 +397,14 @@ database moves to an external, customer-managed cluster:</p>
   <text x="735" y="381" text-anchor="middle" fill="#6a6e73">customer-managed cluster</text>
   <text x="735" y="400" text-anchor="middle" fill="#6a6e73">+ external Redis (6 nodes)</text>
 
-  <line x1="400" y1="56" x2="300" y2="86" stroke="#555" stroke-width="2" marker-end="url(#ha)"/>
-  <line x1="500" y1="56" x2="600" y2="86" stroke="#555" stroke-width="2" marker-end="url(#ha)"/>
-  <line x1="290" y1="142" x2="220" y2="176" stroke="#bbb" stroke-width="1.5"/>
-  <line x1="290" y1="142" x2="400" y2="176" stroke="#bbb" stroke-width="1.5"/>
-  <line x1="610" y1="142" x2="500" y2="176" stroke="#bbb" stroke-width="1.5"/>
+  <line x1="405" y1="58" x2="295" y2="84" stroke="#555" stroke-width="2" marker-end="url(#ha)"/>
+  <line x1="495" y1="58" x2="605" y2="84" stroke="#555" stroke-width="2" marker-end="url(#ha)"/>
+  <line x1="290" y1="142" x2="167" y2="176" stroke="#bbb" stroke-width="1.5"/>
+  <line x1="290" y1="142" x2="437" y2="176" stroke="#bbb" stroke-width="1.5"/>
+  <line x1="610" y1="142" x2="457" y2="176" stroke="#bbb" stroke-width="1.5"/>
   <line x1="610" y1="142" x2="727" y2="176" stroke="#bbb" stroke-width="1.5"/>
-  <line x1="167" y1="298" x2="170" y2="336" stroke="#3e8635" stroke-width="2" marker-end="url(#ha)"/>
-  <line x1="447" y1="296" x2="453" y2="336" stroke="#f0ab00" stroke-width="2" marker-end="url(#ha)"/>
+  <line x1="167" y1="298" x2="167" y2="335" stroke="#3e8635" stroke-width="2" marker-end="url(#ha)"/>
+  <line x1="450" y1="298" x2="450" y2="335" stroke="#f0ab00" stroke-width="2" marker-end="url(#ha)"/>
   <text x="470" y="322" fill="#6a6e73" font-size="11">both hub nodes mount it</text>
   <text x="450" y="452" text-anchor="middle" fill="#6a6e73">Every layer has at least two of everything, so any single VM can fail without stopping automation.</text>
   <text x="450" y="474" text-anchor="middle" fill="#6a6e73">Typical minimum: about 10 RHEL VMs plus a database cluster. Sized and grown per layer.</text>
@@ -544,9 +544,9 @@ team-b is use-only.</li>
   <text x="640" y="334" text-anchor="middle" fill="#6a6e73" font-size="12">tenant-b's DEDICATED execution node</text>
   <text x="640" y="354" text-anchor="middle" fill="#06c" font-size="12">jobs run in its own EE: tenant-b-ee</text>
 
-  <line x1="330" y1="222" x2="270" y2="285" stroke="#3e8635" stroke-width="3" marker-end="url(#la)"/>
+  <line x1="330" y1="222" x2="263" y2="285" stroke="#3e8635" stroke-width="3" marker-end="url(#la)"/>
   <text x="188" y="258" fill="#3e8635" font-weight="bold">ig-tenant-a</text>
-  <line x1="570" y1="222" x2="630" y2="285" stroke="#06c" stroke-width="3" marker-end="url(#lb)"/>
+  <line x1="570" y1="222" x2="637" y2="285" stroke="#06c" stroke-width="3" marker-end="url(#lb)"/>
   <text x="648" y="258" fill="#06c" font-weight="bold">ig-tenant-b</text>
 
   <text x="450" y="400" text-anchor="middle" fill="#6a6e73">All on VMware vSphere, VLAN 2028 (172.16.28.0/24). One platform, one subscription pool, one login page —</text>
@@ -719,7 +719,7 @@ same machines. Each works from its own execution node, in its own EE, with its o
 
   <line x1="172" y1="105" x2="215" y2="105" stroke="#3e8635" stroke-width="2.5" marker-end="url(#wg)"/>
   <line x1="492" y1="105" x2="535" y2="105" stroke="#3e8635" stroke-width="2.5" marker-end="url(#wg)"/>
-  <line x1="672" y1="105" x2="775" y2="145" stroke="#3e8635" stroke-width="2.5" marker-end="url(#wg)"/>
+  <line x1="672" y1="105" x2="713" y2="167" stroke="#3e8635" stroke-width="2.5" marker-end="url(#wg)"/>
   <text x="680" y="92" fill="#3e8635" font-weight="bold" font-size="12">patches the OS</text>
 
   <text x="20" y="268" font-weight="bold" fill="#06c">Team B — release day (a TEMPLATE with an input: app_version)</text>
@@ -739,7 +739,7 @@ same machines. Each works from its own execution node, in its own EE, with its o
 
   <line x1="172" y1="333" x2="215" y2="333" stroke="#06c" stroke-width="2.5" marker-end="url(#wb)"/>
   <line x1="492" y1="333" x2="535" y2="333" stroke="#06c" stroke-width="2.5" marker-end="url(#wb)"/>
-  <line x1="672" y1="333" x2="775" y2="327" stroke="#06c" stroke-width="2.5" marker-end="url(#wb)"/>
+  <line x1="672" y1="333" x2="713" y2="303" stroke="#06c" stroke-width="2.5" marker-end="url(#wb)"/>
   <text x="680" y="358" fill="#06c" font-weight="bold" font-size="12">ships the app</text>
 
   <text x="450" y="440" text-anchor="middle" fill="#6a6e73">Same machines, different work scope: team-a owns the operating system, team-b owns the application on top. Neither touches the other's automation.</text>
@@ -900,8 +900,8 @@ organization — so credentials stay per-org by design.)</li>
   <line x1="242" y1="330" x2="345" y2="250" stroke="#06c" stroke-width="3" marker-end="url(#sb2)"/>
   <text x="302" y="322" fill="#06c" font-weight="bold" font-size="12">use only</text>
 
-  <line x1="602" y1="180" x2="685" y2="105" stroke="#555" stroke-width="2"/>
-  <line x1="602" y1="250" x2="685" y2="330" stroke="#555" stroke-width="2"/>
+  <line x1="602" y1="185" x2="686" y2="95" stroke="#555" stroke-width="2"/>
+  <line x1="602" y1="245" x2="686" y2="335" stroke="#555" stroke-width="2"/>
   <text x="645" y="220" fill="#6a6e73">contains</text>
 
   <path d="M 200 298 L 200 228 L 342 228" fill="none" stroke="#ee0000" stroke-width="2" stroke-dasharray="7 5" marker-end="url(#sr)"/>
