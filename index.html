@@ -498,26 +498,35 @@ VM-based execution nodes can still be attached for jobs that must run close to s
 the operator's out-of-the-box (growth) values; for an HA (enterprise) install Red Hat's tested
 topology raises the front-line components to 2 replicas each.</p>
 <table>
-<tr><th>Component</th><th>Kubernetes workload</th><th>Default replicas</th><th>For HA</th></tr>
-<tr><td>Platform gateway</td><td>Deployment (behind an OCP Route)</td><td>1</td><td>2</td></tr>
-<tr><td>Controller — web</td><td>Deployment</td><td>1</td><td>2</td></tr>
-<tr><td>Controller — task</td><td>Deployment</td><td>1</td><td>2</td></tr>
-<tr><td>Hub — api</td><td>Deployment</td><td>1</td><td>2</td></tr>
-<tr><td>Hub — content</td><td>Deployment</td><td>2</td><td>2</td></tr>
-<tr><td>Hub — web</td><td>Deployment</td><td>1</td><td>2</td></tr>
-<tr><td>Hub — worker</td><td>Deployment</td><td>2</td><td>2</td></tr>
-<tr><td>EDA — api</td><td>Deployment</td><td>1</td><td>2</td></tr>
-<tr><td>EDA — default worker</td><td>Deployment</td><td>2</td><td>2</td></tr>
-<tr><td>EDA — activation worker</td><td>Deployment</td><td>2</td><td>2</td></tr>
-<tr><td>EDA — event stream</td><td>Deployment</td><td>1</td><td>2</td></tr>
-<tr><td>PostgreSQL (operator-managed)</td><td>StatefulSet with a PVC</td><td>1</td><td>use an external HA database instead</td></tr>
-<tr><td>Redis (cache/broker)</td><td>Deployment</td><td>1</td><td>1 (per instance)</td></tr>
-<tr><td>Job execution (container group)</td><td>one Pod per job, created on demand</td><td>0 when idle</td><td>scales with the cluster</td></tr>
+<tr><th>Component</th><th>Kubernetes workload</th><th>Default replicas</th><th>Default request per pod (CPU / memory)</th><th>For HA</th></tr>
+<tr><td>Platform gateway</td><td>Deployment (behind an OCP Route)</td><td>1</td><td>set in the CR (no pinned default)</td><td>2</td></tr>
+<tr><td>Controller — web</td><td>Deployment</td><td>1</td><td>100m / 128Mi</td><td>2</td></tr>
+<tr><td>Controller — task</td><td>Deployment</td><td>1</td><td>100m / 128Mi</td><td>2</td></tr>
+<tr><td>Hub — api</td><td>Deployment</td><td>1</td><td>200m / 512Mi</td><td>2</td></tr>
+<tr><td>Hub — content</td><td>Deployment</td><td>2</td><td>200m / 512Mi</td><td>2</td></tr>
+<tr><td>Hub — web</td><td>Deployment</td><td>1</td><td>200m / 512Mi</td><td>2</td></tr>
+<tr><td>Hub — worker</td><td>Deployment</td><td>2</td><td>200m / 512Mi</td><td>2</td></tr>
+<tr><td>EDA — api</td><td>Deployment</td><td>1</td><td>50m / 350Mi</td><td>2</td></tr>
+<tr><td>EDA — default worker</td><td>Deployment</td><td>2</td><td>25m / 130Mi</td><td>2</td></tr>
+<tr><td>EDA — activation worker</td><td>Deployment</td><td>2</td><td>25m / 150Mi</td><td>2</td></tr>
+<tr><td>EDA — event stream</td><td>Deployment</td><td>1</td><td>50m / 350Mi</td><td>2</td></tr>
+<tr><td>PostgreSQL (operator-managed)</td><td>StatefulSet with a PVC</td><td>1</td><td>10m / 64Mi</td><td>use an external HA database instead</td></tr>
+<tr><td>Redis (hub cache)</td><td>Deployment</td><td>1</td><td>200m / 512Mi</td><td>1 (per instance)</td></tr>
+<tr><td>Job execution (container group)</td><td>one Pod per job, created on demand</td><td>0 when idle</td><td>250m / 100Mi per job pod</td><td>scales with the cluster</td></tr>
 </table>
-<p>Every replica count is a one-line change in the custom resource (for example
-<code>spec.controller.web.replicas: 2</code>) and the operator reconciles it — that is the
-practical difference from the RHEL picture, where adding a node means running the installer
-with a bigger inventory.</p>
+<ul>
+<li>These are Kubernetes <strong>requests</strong> (what the scheduler reserves), not limits — pods can
+use more when the node has headroom. Values come from the component operators' defaults.</li>
+<li>The controller pods also carry small sidecars (redis 50m / 64Mi, rsyslog 100m / 128Mi,
+control EE 100m / 64Mi), so budget roughly 350m / 400Mi per controller pod in practice.</li>
+<li>Rule of thumb for the whole platform at defaults: about 2 CPU cores and 4-5 GiB of requests,
+before any job pods — a small footprint until automation actually runs.</li>
+</ul>
+<p>Every replica count and resource request is a one-line change in the custom resource (for
+example <code>spec.controller.web.replicas: 2</code> or
+<code>spec.hub.api.resource_requirements.requests.memory: 1Gi</code>) and the operator
+reconciles it — that is the practical difference from the RHEL picture, where adding capacity
+means running the installer with a bigger inventory.</p>
 </section><section class="step" id="scen-a"><h2>Scenario A: two teams share one AAP</h2>
 <div class="callout">
 <strong>The situation:</strong> two teams with totally separate work. They share nothing except the
