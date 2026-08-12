@@ -504,6 +504,10 @@ teams automate. Requirement: neither team may see, run, or change the other team
 <li><strong>One organization per team</strong> (tenant-a, tenant-b) — the SEE boundary.</li>
 <li><strong>One team + two users per org</strong> — an admin (Organization Admin) and an operator (Organization Member).</li>
 <li><strong>One dedicated execution node per team</strong>, bound via an instance group — the WHERE guarantee.</li>
+<li><strong>One dedicated execution environment per team</strong> — each team's jobs run inside its
+OWN container image (<code>tenant-a-ee</code> / <code>tenant-b-ee</code>, built from the hub's
+supported EE and registered inside the team's org). Even the runtime toolbox is per-tenant:
+one team can add libraries or collections to its EE without ever touching the other's.</li>
 <li><strong>Own project, inventory, credentials, job template per team</strong> — even the git repos are separate private repos, each reached with the owning team's token only.</li>
 <li><strong>One shared inventory</strong>, owned by platform-admin. Both teams run against it;
 <strong>team-a additionally maintains it</strong> (fleet owner — may edit and add machines),
@@ -531,12 +535,14 @@ team-b is use-only.</li>
   <text x="570" y="170" text-anchor="middle" font-weight="bold">Gitea (git server)</text>
   <text x="570" y="189" text-anchor="middle" fill="#6a6e73">one private repo per tenant</text>
 
-  <rect x="120" y="290" width="280" height="70" rx="8" fill="#f3faf2" stroke="#3e8635" stroke-width="2"/>
-  <text x="260" y="316" text-anchor="middle" font-weight="bold">aap-exec-a (172.16.28.31)</text>
-  <text x="260" y="338" text-anchor="middle" fill="#6a6e73">tenant-a's DEDICATED execution node</text>
-  <rect x="500" y="290" width="280" height="70" rx="8" fill="#eef6ff" stroke="#06c" stroke-width="2"/>
-  <text x="640" y="316" text-anchor="middle" font-weight="bold">aap-exec-b (172.16.28.32)</text>
-  <text x="640" y="338" text-anchor="middle" fill="#6a6e73">tenant-b's DEDICATED execution node</text>
+  <rect x="120" y="290" width="280" height="88" rx="8" fill="#f3faf2" stroke="#3e8635" stroke-width="2"/>
+  <text x="260" y="314" text-anchor="middle" font-weight="bold">aap-exec-a (172.16.28.31)</text>
+  <text x="260" y="334" text-anchor="middle" fill="#6a6e73" font-size="12">tenant-a's DEDICATED execution node</text>
+  <text x="260" y="354" text-anchor="middle" fill="#3e8635" font-size="12">jobs run in its own EE: tenant-a-ee</text>
+  <rect x="500" y="290" width="280" height="88" rx="8" fill="#eef6ff" stroke="#06c" stroke-width="2"/>
+  <text x="640" y="314" text-anchor="middle" font-weight="bold">aap-exec-b (172.16.28.32)</text>
+  <text x="640" y="334" text-anchor="middle" fill="#6a6e73" font-size="12">tenant-b's DEDICATED execution node</text>
+  <text x="640" y="354" text-anchor="middle" fill="#06c" font-size="12">jobs run in its own EE: tenant-b-ee</text>
 
   <line x1="330" y1="222" x2="270" y2="285" stroke="#3e8635" stroke-width="3" marker-end="url(#la)"/>
   <text x="188" y="258" fill="#3e8635" font-weight="bold">ig-tenant-a</text>
