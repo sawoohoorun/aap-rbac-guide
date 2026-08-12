@@ -343,6 +343,7 @@ was removed in AAP 2.7).</p>
 what the scenario A platform did (one control VM plus two execution VMs).</li>
 <li><strong>No high availability:</strong> one VM down = platform down. Jobs that already ran are safe
 (database on the VM), but nothing new runs until it is back.</li>
+<li><strong>Storage:</strong> local disk only — a single node needs no shared storage.</li>
 <li><strong>Best for:</strong> pilots, labs, small teams, edge sites — and scenario B in this guide.</li>
 </ul>
 </section><section class="step" id="arch-ha"><h2>Architecture: full HA AAP on RHEL</h2>
@@ -371,21 +372,27 @@ database moves to an external, customer-managed cluster:</p>
   <rect x="340" y="180" width="215" height="52" rx="6" fill="#eef6ff" stroke="#06c"/>
   <text x="447" y="202" text-anchor="middle" font-weight="bold">Hub node 1</text>
   <rect x="340" y="244" width="215" height="52" rx="6" fill="#eef6ff" stroke="#06c"/>
-  <text x="447" y="266" text-anchor="middle" font-weight="bold">Hub node 2</text>
-  <text x="447" y="285" text-anchor="middle" fill="#6a6e73">shared storage for content</text>
+  <text x="447" y="275" text-anchor="middle" font-weight="bold">Hub node 2</text>
 
   <rect x="620" y="180" width="215" height="52" rx="6" fill="#eef6ff" stroke="#06c"/>
   <text x="727" y="202" text-anchor="middle" font-weight="bold">EDA node 1</text>
   <rect x="620" y="244" width="215" height="52" rx="6" fill="#eef6ff" stroke="#06c"/>
   <text x="727" y="266" text-anchor="middle" font-weight="bold">EDA node 2</text>
 
-  <rect x="60" y="340" width="360" height="60" rx="6" fill="#f3faf2" stroke="#3e8635" stroke-width="2"/>
-  <text x="240" y="364" text-anchor="middle" font-weight="bold">Execution nodes (2 or more)</text>
-  <text x="240" y="384" text-anchor="middle" fill="#6a6e73">scale out per team or per site; receptor mesh, can be remote</text>
+  <rect x="40" y="340" width="260" height="76" rx="6" fill="#f3faf2" stroke="#3e8635" stroke-width="2"/>
+  <text x="170" y="364" text-anchor="middle" font-weight="bold">Execution nodes (2 or more)</text>
+  <text x="170" y="384" text-anchor="middle" fill="#6a6e73">scale out per team or per site;</text>
+  <text x="170" y="403" text-anchor="middle" fill="#6a6e73">receptor mesh, can be remote</text>
 
-  <rect x="480" y="340" width="355" height="60" rx="6" fill="#f5f5f5" stroke="#999" stroke-width="2"/>
-  <text x="657" y="364" text-anchor="middle" font-weight="bold">External PostgreSQL (HA)</text>
-  <text x="657" y="384" text-anchor="middle" fill="#6a6e73">customer-managed cluster + external Redis (6 nodes for HA)</text>
+  <rect x="320" y="340" width="270" height="76" rx="6" fill="#fdf4e5" stroke="#f0ab00" stroke-width="2"/>
+  <text x="455" y="362" text-anchor="middle" font-weight="bold">Shared content storage</text>
+  <text x="455" y="381" text-anchor="middle" fill="#6a6e73">required for the 2-node hub:</text>
+  <text x="455" y="400" text-anchor="middle" fill="#6a6e73">NFS export, or S3 / Azure Blob</text>
+
+  <rect x="610" y="340" width="250" height="76" rx="6" fill="#f5f5f5" stroke="#999" stroke-width="2"/>
+  <text x="735" y="362" text-anchor="middle" font-weight="bold">External PostgreSQL (HA)</text>
+  <text x="735" y="381" text-anchor="middle" fill="#6a6e73">customer-managed cluster</text>
+  <text x="735" y="400" text-anchor="middle" fill="#6a6e73">+ external Redis (6 nodes)</text>
 
   <line x1="400" y1="56" x2="300" y2="86" stroke="#555" stroke-width="2" marker-end="url(#ha)"/>
   <line x1="500" y1="56" x2="600" y2="86" stroke="#555" stroke-width="2" marker-end="url(#ha)"/>
@@ -393,15 +400,19 @@ database moves to an external, customer-managed cluster:</p>
   <line x1="290" y1="142" x2="400" y2="176" stroke="#bbb" stroke-width="1.5"/>
   <line x1="610" y1="142" x2="500" y2="176" stroke="#bbb" stroke-width="1.5"/>
   <line x1="610" y1="142" x2="727" y2="176" stroke="#bbb" stroke-width="1.5"/>
-  <line x1="167" y1="298" x2="200" y2="336" stroke="#3e8635" stroke-width="2" marker-end="url(#ha)"/>
-  <text x="450" y="440" text-anchor="middle" fill="#6a6e73">Every layer has at least two of everything, so any single VM can fail without stopping automation.</text>
-  <text x="450" y="462" text-anchor="middle" fill="#6a6e73">Typical minimum: about 10 RHEL VMs plus a database cluster. Sized and grown per layer.</text>
+  <line x1="167" y1="298" x2="170" y2="336" stroke="#3e8635" stroke-width="2" marker-end="url(#ha)"/>
+  <line x1="447" y1="296" x2="453" y2="336" stroke="#f0ab00" stroke-width="2" marker-end="url(#ha)"/>
+  <text x="470" y="322" fill="#6a6e73" font-size="11">both hub nodes mount it</text>
+  <text x="450" y="452" text-anchor="middle" fill="#6a6e73">Every layer has at least two of everything, so any single VM can fail without stopping automation.</text>
+  <text x="450" y="474" text-anchor="middle" fill="#6a6e73">Typical minimum: about 10 RHEL VMs plus a database cluster. Sized and grown per layer.</text>
 </svg>
 <div class="diagcap">Enterprise HA topology on RHEL: redundant gateway, controller, hub and EDA layers behind a load balancer, with an external database.</div></div>
 <ul>
 <li><strong>Gateway x2</strong> behind a load balancer — login and API stay up if one fails.</li>
 <li><strong>Controller x2</strong> — control-plane redundancy; a failed node's jobs are picked up.</li>
-<li><strong>Hub x2</strong> with shared storage — content and EE images stay available.</li>
+<li><strong>Hub x2</strong> — content and EE images stay available. This is the one layer with a
+<strong>shared storage requirement</strong>: both hub nodes must see the same content directory
+(see the list below).</li>
 <li><strong>EDA x2</strong> — event listeners keep listening.</li>
 <li><strong>Execution nodes, 2 or more</strong> — this is also the scaling layer: add nodes per team,
 per datacenter or per security zone, and group them with Instance Groups.</li>
@@ -409,14 +420,22 @@ per datacenter or per security zone, and group them with Instance Groups.</li>
 <li><strong>Typical minimum:</strong> about 10 RHEL VMs plus the database cluster. All still installed
 and upgraded by the same containerized installer, from one inventory file.</li>
 </ul>
-<div class="hint"><span class="hb">RBAC concept</span> The single-node and HA pictures are the SAME product and installer — the difference is only how many hosts appear in the installer inventory. You can start small and grow.</div>
+<h3>Shared storage requirements at a glance</h3>
+<table>
+<tr><th>Layer</th><th>Needs shared storage?</th><th>Supported options (examples)</th></tr>
+<tr><td>Automation Hub, 2+ nodes</td><td class="no">yes — required</td><td>NFS shared filesystem mounted by every hub node; or switch the hub backend to object storage: Amazon S3 or Azure Blob Storage</td></tr>
+<tr><td>Gateway / Controller / EDA nodes</td><td class="ok">no</td><td>local disk on each node is enough</td></tr>
+<tr><td>Execution nodes</td><td class="ok">no</td><td>local disk; jobs are sent to them over the receptor mesh</td></tr>
+<tr><td>Database layer</td><td>not storage — a service</td><td>external PostgreSQL cluster (plus external Redis for a full-HA gateway)</td></tr>
+</table>
+<div class="hint"><span class="hb">Good to know</span> The single-node and HA pictures are the SAME product and installer — the difference is only how many hosts appear in the installer inventory. You can start small and grow.</div>
 </section><section class="step" id="arch-ocp"><h2>Architecture: AAP on OpenShift</h2>
 <p>If the customer already runs OpenShift, AAP can be installed as an <strong>operator</strong> from
 OperatorHub instead of on RHEL VMs:</p>
 <div class="diag">
-<svg viewBox="0 0 900 430" width="100%" role="img" aria-label="AAP on OpenShift" font-family="sans-serif" font-size="13">
+<svg viewBox="0 0 900 480" width="100%" role="img" aria-label="AAP on OpenShift" font-family="sans-serif" font-size="13">
   <defs><marker id="oc" markerWidth="9" markerHeight="9" refX="5" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#555"/></marker></defs>
-  <rect x="40" y="30" width="820" height="330" rx="10" fill="#fff" stroke="#151515" stroke-width="2"/>
+  <rect x="40" y="30" width="820" height="380" rx="10" fill="#fff" stroke="#151515" stroke-width="2"/>
   <text x="450" y="58" text-anchor="middle" font-weight="bold">OpenShift cluster</text>
 
   <rect x="70" y="80" width="240" height="60" rx="6" fill="#ffe8e8" stroke="#ee0000"/>
@@ -448,8 +467,12 @@ OperatorHub instead of on RHEL VMs:</p>
   <text x="730" y="306" text-anchor="middle" fill="#6a6e73">optional add-on; only</text>
   <text x="730" y="322" text-anchor="middle" fill="#6a6e73">available on OpenShift</text>
 
+  <rect x="70" y="345" width="760" height="52" rx="6" fill="#fdf4e5" stroke="#f0ab00" stroke-width="2"/>
+  <text x="450" y="366" text-anchor="middle" font-weight="bold">Persistent storage from the cluster (StorageClass)</text>
+  <text x="450" y="387" text-anchor="middle" fill="#6a6e73" font-size="12">hub content needs RWX volumes — e.g. ODF / CephFS, NFS, EFS, Azure Files; the database uses normal RWO block volumes</text>
+
   <line x1="190" y1="142" x2="190" y2="166" stroke="#555" stroke-width="2" marker-end="url(#oc)"/>
-  <text x="450" y="395" text-anchor="middle" fill="#6a6e73">Kubernetes gives the availability and scaling; the trade is that you need an OpenShift cluster and its skills first.</text>
+  <text x="450" y="445" text-anchor="middle" fill="#6a6e73">Kubernetes gives the availability and scaling; the trade is that you need an OpenShift cluster and its skills first.</text>
 </svg>
 <div class="diagcap">AAP on OpenShift: the operator runs the platform as pods; jobs run as on-demand pods in container groups.</div></div>
 <ul>
@@ -457,6 +480,10 @@ OperatorHub instead of on RHEL VMs:</p>
 <li><strong>Availability from Kubernetes:</strong> pods reschedule automatically; no load balancer to build.</li>
 <li><strong>Jobs run as pods</strong> ("container groups"): each job gets a fresh pod, capacity comes
 from the cluster, and it scales to zero when idle.</li>
+<li><strong>Storage comes from the cluster</strong> as a StorageClass. The shared-storage requirement
+here is the hub's content volume, which must be <strong>RWX</strong> (ReadWriteMany — many pods,
+same volume). Examples: OpenShift Data Foundation / CephFS, an NFS storage class, AWS EFS,
+Azure Files. The database needs only a normal RWO block volume.</li>
 <li><strong>The self-service portal</strong> (a newer AAP add-on giving business users a catalog-style
 front door) ships as a Helm chart <strong>for OpenShift only</strong> — on RHEL-based AAP the native
 equivalent is job-template Surveys, which scenario A demonstrates live.</li>
@@ -800,7 +827,7 @@ heard of you. That is the difference between logical and physical isolation, vis
 <tr><td>Noise between teams</td><td>execution isolated by dedicated nodes; control plane still shared</td><td class="ok">none</td></tr>
 <tr><td>Best when</td><td>teams belong to one company, cost and central operations matter, isolation "cannot see or affect each other" is enough</td><td>hard compliance/regulatory separation, different companies, wildly different change cadences, or a team must own its platform end to end</td></tr>
 </table>
-<div class="hint"><span class="hb">RBAC concept</span> Rule of thumb: start with scenario A — RBAC isolation held up under live attack-style tests here. Move a team to scenario B only when a rule (not a feeling) demands physical separation. The as-code setup makes that move cheap: the same playbooks deployed both.</div>
+<div class="hint"><span class="hb">Recommendation</span> Rule of thumb: start with scenario A — RBAC isolation held up under live attack-style tests here. Move a team to scenario B only when a rule (not a feeling) demands physical separation. The as-code setup makes that move cheap: the same playbooks deployed both.</div>
 </section><section class="step" id="reproduce"><h2>Reproduce everything</h2>
 <p>Nothing in this guide was clicked together. The whole environment — both platforms — comes from
 playbooks in this repository:</p>
