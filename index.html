@@ -310,8 +310,8 @@ was removed in AAP 2.7).</p>
 <div class="diag">
 <svg viewBox="0 0 900 380" width="100%" role="img" aria-label="Single-node AAP on RHEL" font-family="sans-serif" font-size="13">
   <rect x="150" y="40" width="600" height="290" rx="10" fill="#fff" stroke="#151515" stroke-width="2"/>
-  <text x="450" y="68" text-anchor="middle" font-weight="bold">One RHEL 9 virtual machine (example: aap-b.redhat.local, 4 vCPU / 16 GB / 60 GB)</text>
-  <text x="450" y="88" text-anchor="middle" fill="#6a6e73">everything runs as rootless podman containers, installed by the containerized installer</text>
+  <text x="450" y="68" text-anchor="middle" font-weight="bold">One RHEL 9 virtual machine — minimum 4 vCPU / 16 GB RAM / 60 GB disk</text>
+  <text x="450" y="88" text-anchor="middle" fill="#6a6e73">everything runs as rootless podman containers, installed by the containerized installer (this is exactly what aap-b.redhat.local runs)</text>
 
   <rect x="180" y="110" width="540" height="44" rx="6" fill="#ffe8e8" stroke="#ee0000"/>
   <text x="450" y="137" text-anchor="middle" font-weight="bold">Platform Gateway (port 443)</text>
@@ -406,8 +406,9 @@ database moves to an external, customer-managed cluster:</p>
   <line x1="167" y1="298" x2="167" y2="335" stroke="#3e8635" stroke-width="2" marker-end="url(#ha)"/>
   <line x1="450" y1="298" x2="450" y2="335" stroke="#f0ab00" stroke-width="2" marker-end="url(#ha)"/>
   <text x="470" y="322" fill="#6a6e73" font-size="11">both hub nodes mount it</text>
-  <text x="450" y="452" text-anchor="middle" fill="#6a6e73">Every layer has at least two of everything, so any single VM can fail without stopping automation.</text>
-  <text x="450" y="474" text-anchor="middle" fill="#6a6e73">Typical minimum: about 10 RHEL VMs plus a database cluster. Sized and grown per layer.</text>
+  <text x="450" y="446" text-anchor="middle" fill="#6a6e73">Every layer has at least two of everything, so any single VM can fail without stopping automation.</text>
+  <text x="450" y="468" text-anchor="middle" fill="#6a6e73">Typical minimum: about 10 RHEL VMs plus a database cluster. Sized and grown per layer.</text>
+  <text x="450" y="494" text-anchor="middle" font-weight="bold" fill="#151515">Minimum per VM: 4 vCPU / 16 GB RAM / 60 GB disk — the installer preflight refuses nodes below 16 GB, execution nodes included.</text>
 </svg>
 <div class="diagcap">Enterprise HA topology on RHEL: redundant gateway, controller, hub and EDA layers behind a load balancer, with an external database.</div></div>
 <ul>
@@ -420,8 +421,10 @@ database moves to an external, customer-managed cluster:</p>
 <li><strong>Execution nodes, 2 or more</strong> — this is also the scaling layer: add nodes per team,
 per datacenter or per security zone, and group them with Instance Groups.</li>
 <li><strong>External PostgreSQL + external Redis</strong> — the platform's state survives any platform node.</li>
-<li><strong>Typical minimum:</strong> about 10 RHEL VMs plus the database cluster. All still installed
-and upgraded by the same containerized installer, from one inventory file.</li>
+<li><strong>Typical minimum:</strong> about 10 RHEL VMs plus the database cluster, each VM at least
+4 vCPU / 16 GB RAM / 60 GB disk. All still installed and upgraded by the same containerized
+installer, from one inventory file. (The 16 GB floor is enforced: this lab's installer preflight
+refused execution nodes with less until they were resized.)</li>
 </ul>
 <h3>Shared storage requirements at a glance</h3>
 <table>
