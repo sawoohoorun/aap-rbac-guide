@@ -354,7 +354,7 @@ what the scenario A platform did (one control VM plus two execution VMs).</li>
 <p>For production where automation is business-critical, every layer gets at least two nodes and the
 database moves to an external, customer-managed cluster:</p>
 <div class="diag">
-<svg viewBox="0 0 900 600" width="100%" role="img" aria-label="Enterprise HA AAP on RHEL" font-family="sans-serif" font-size="13">
+<svg viewBox="0 0 900 640" width="100%" role="img" aria-label="Enterprise HA AAP on RHEL" font-family="sans-serif" font-size="13">
   <defs><marker id="ha" markerWidth="9" markerHeight="9" refX="5" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9 Z" fill="#555"/></marker></defs>
   <rect x="330" y="10" width="240" height="46" rx="8" fill="#fff" stroke="#151515" stroke-width="2"/>
   <text x="450" y="38" text-anchor="middle" font-weight="bold">Load balancer (customer-provided)</text>
@@ -399,10 +399,27 @@ database moves to an external, customer-managed cluster:</p>
   <text x="735" y="393" text-anchor="middle" fill="#6a6e73" font-size="11">per component, own user each:</text>
   <text x="735" y="409" text-anchor="middle" font-size="11" font-weight="bold">gateway + controller + hub + EDA</text>
 
-  <rect x="610" y="428" width="250" height="60" rx="6" fill="#f5f5f5" stroke="#999" stroke-width="2"/>
-  <text x="735" y="448" text-anchor="middle" font-weight="bold">External Redis (6-node cluster)</text>
-  <text x="735" y="466" text-anchor="middle" fill="#6a6e73" font-size="11">used by gateway + EDA (sessions, cache,</text>
-  <text x="735" y="481" text-anchor="middle" fill="#6a6e73" font-size="11">events); controller nodes keep local Redis</text>
+  <rect x="40" y="432" width="820" height="96" rx="8" fill="#eef6ff" stroke="#06c" stroke-width="2"/>
+  <text x="450" y="452" text-anchor="middle" font-weight="bold">Redis cluster (6 members) — INSTALLER-managed, no separate install needed</text>
+  <rect x="55" y="462" width="120" height="40" rx="5" fill="#fff" stroke="#06c"/>
+  <text x="115" y="479" text-anchor="middle" font-size="11" font-weight="bold">on gateway 1</text>
+  <text x="115" y="494" text-anchor="middle" font-size="10" fill="#6a6e73">primary</text>
+  <rect x="189" y="462" width="120" height="40" rx="5" fill="#fff" stroke="#06c"/>
+  <text x="249" y="479" text-anchor="middle" font-size="11" font-weight="bold">on gateway 2</text>
+  <text x="249" y="494" text-anchor="middle" font-size="10" fill="#6a6e73">replica</text>
+  <rect x="323" y="462" width="120" height="40" rx="5" fill="#fff" stroke="#06c"/>
+  <text x="383" y="479" text-anchor="middle" font-size="11" font-weight="bold">on hub 1</text>
+  <text x="383" y="494" text-anchor="middle" font-size="10" fill="#6a6e73">primary</text>
+  <rect x="457" y="462" width="120" height="40" rx="5" fill="#fff" stroke="#06c"/>
+  <text x="517" y="479" text-anchor="middle" font-size="11" font-weight="bold">on hub 2</text>
+  <text x="517" y="494" text-anchor="middle" font-size="10" fill="#6a6e73">replica</text>
+  <rect x="591" y="462" width="120" height="40" rx="5" fill="#fff" stroke="#06c"/>
+  <text x="651" y="479" text-anchor="middle" font-size="11" font-weight="bold">on EDA 1</text>
+  <text x="651" y="494" text-anchor="middle" font-size="10" fill="#6a6e73">primary</text>
+  <rect x="725" y="462" width="120" height="40" rx="5" fill="#fff" stroke="#06c"/>
+  <text x="785" y="479" text-anchor="middle" font-size="11" font-weight="bold">on EDA 2</text>
+  <text x="785" y="494" text-anchor="middle" font-size="10" fill="#6a6e73">replica</text>
+  <text x="450" y="520" text-anchor="middle" fill="#6a6e73" font-size="11">colocated on the six existing platform VMs ([redis] inventory group); serves gateway + EDA — controller nodes keep local Redis</text>
 
   <line x1="405" y1="58" x2="295" y2="84" stroke="#555" stroke-width="2" marker-end="url(#ha)"/>
   <line x1="495" y1="58" x2="605" y2="84" stroke="#555" stroke-width="2" marker-end="url(#ha)"/>
@@ -413,9 +430,9 @@ database moves to an external, customer-managed cluster:</p>
   <line x1="167" y1="298" x2="167" y2="335" stroke="#3e8635" stroke-width="2" marker-end="url(#ha)"/>
   <line x1="450" y1="298" x2="450" y2="335" stroke="#f0ab00" stroke-width="2" marker-end="url(#ha)"/>
   <text x="470" y="322" fill="#6a6e73" font-size="11">both hub nodes mount it</text>
-  <text x="450" y="516" text-anchor="middle" fill="#6a6e73">Every layer has at least two of everything, so any single VM can fail without stopping automation.</text>
-  <text x="450" y="538" text-anchor="middle" fill="#6a6e73">Typical minimum: about 10 RHEL VMs plus a database cluster. Sized and grown per layer.</text>
-  <text x="450" y="564" text-anchor="middle" font-weight="bold" fill="#151515">Minimum per VM: 4 vCPU / 16 GB RAM / 60 GB disk — the installer preflight refuses nodes below 16 GB, execution nodes included.</text>
+  <text x="450" y="552" text-anchor="middle" fill="#6a6e73">Every layer has at least two of everything, so any single VM can fail without stopping automation.</text>
+  <text x="450" y="574" text-anchor="middle" fill="#6a6e73">Typical minimum: about 10 RHEL VMs plus a database cluster. Sized and grown per layer.</text>
+  <text x="450" y="600" text-anchor="middle" font-weight="bold" fill="#151515">Minimum per VM: 4 vCPU / 16 GB RAM / 60 GB disk — the installer preflight refuses nodes below 16 GB, execution nodes included.</text>
 </svg>
 <div class="diagcap">Enterprise HA topology on RHEL: redundant gateway, controller, hub and EDA layers behind a load balancer, with an external database.</div></div>
 <ul>
@@ -427,12 +444,15 @@ database moves to an external, customer-managed cluster:</p>
 <li><strong>EDA x2</strong> — event listeners keep listening.</li>
 <li><strong>Execution nodes, 2 or more</strong> — this is also the scaling layer: add nodes per team,
 per datacenter or per security zone, and group them with Instance Groups.</li>
-<li><strong>External PostgreSQL + external Redis</strong> — the platform's state survives any
-platform node. One PostgreSQL cluster holds a <strong>separate database per component</strong>
-(gateway, controller, hub, EDA — each with its own user, exactly as on our single-node installs);
-the <strong>6-node Redis cluster</strong> (3 primaries + 3 replicas) serves the <strong>gateway and
-EDA</strong> for sessions, caching and event handling, while controller nodes keep their own local
-Redis.</li>
+<li><strong>External PostgreSQL</strong> (customer-managed) — the platform's state survives any
+platform node. One cluster holds a <strong>separate database per component</strong> (gateway,
+controller, hub, EDA — each with its own user, exactly as on our single-node installs). This is
+the ONE external service you must build yourself.</li>
+<li><strong>Redis: no separate install.</strong> The AAP installer deploys and manages the 6-member
+Redis cluster itself — Red Hat's shipped enterprise inventory simply lists the two gateway, two hub
+and two EDA VMs in the <code>[redis]</code> group (3 primaries + 3 replicas, colocated; no extra
+VMs). It serves the <strong>gateway and EDA</strong> for sessions, caching and event handling;
+controller nodes keep their own local Redis.</li>
 <li><strong>Typical minimum:</strong> about 10 RHEL VMs plus the database cluster, each VM at least
 4 vCPU / 16 GB RAM / 60 GB disk. All still installed and upgraded by the same containerized
 installer, from one inventory file. (The 16 GB floor is enforced: this lab's installer preflight
@@ -566,17 +586,19 @@ operators' code wherever possible, not from marketing text.</p>
 (4 vCPU / 16 GB) with fast disks; the database is the one component whose loss stops everything,
 which is why it is customer-managed HA rather than an AAP component.</p>
 
-<h3>External Redis</h3>
+<h3>Redis (unlike the database: nothing external to build)</h3>
 <table>
 <tr><th>Requirement</th><th>RHEL (containerized)</th><th>OpenShift (operator)</th></tr>
+<tr><td>Who builds and runs it</td><td><strong>the AAP installer</strong> — it deploys and manages the Redis containers on whichever hosts you list in the <code>[redis]</code> inventory group; the customer never installs Redis</td><td>the operator (Redis pods) — nothing to build</td></tr>
 <tr><td>Who needs it</td><td colspan="2">the platform gateway and EDA (sessions, cache, event handling); controller and hub do not use the central Redis</td></tr>
-<tr><td>Modes</td><td><code>redis_mode: cluster</code> (default) or <code>standalone</code>; cluster mode preflight <strong>requires at least 6 nodes</strong> in the [redis] inventory group (3 primaries + 3 replicas)</td><td>operator-managed Redis pods — no external Redis to build</td></tr>
+<tr><td>Modes</td><td><code>redis_mode: cluster</code> (default) or <code>standalone</code>; cluster mode preflight <strong>requires at least 6 members</strong> in the [redis] group (3 primaries + 3 replicas)</td><td>operator-managed</td></tr>
 <tr><td>Network / auth</td><td>port 6379 (configurable), optional password, optional TLS (<code>redis_tls_cert/key</code>)</td><td>internal to the cluster</td></tr>
 </table>
-<p><strong>Example reference design (RHEL enterprise):</strong> six small RHEL VMs (2 vCPU / 4 GB
-each) running Redis in cluster mode, three primaries with one replica each, TLS on, listed in the
-installer's [redis] group — the installer configures the cluster itself. A single-node
-(standalone) Redis is fine wherever the gateway layer itself is not redundant.</p>
+<p><strong>Example reference design (RHEL enterprise):</strong> no extra VMs — Red Hat's shipped
+enterprise example inventory lists the two gateway, two hub and two EDA VMs in the
+<code>[redis]</code> group, so the 6-member cluster is colocated on platform nodes the topology
+already has, and the installer configures the whole cluster. A single standalone Redis (as on our
+single-node platforms) is fine wherever the gateway layer itself is not redundant.</p>
 
 <h3>Subscription</h3>
 <ul>
