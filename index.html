@@ -62,7 +62,7 @@ footer{color:var(--mut);font-size:.85rem;border-top:1px solid var(--line);margin
     <h1>Architecture, RBAC and<br>Multi-Team Scenarios</h1>
   </div>
   <ul>
-    <div class="ghead">Understand AAP</div><li><a href="#what-is-aap">What is AAP</a></li><li><a href="#rbac">How RBAC works</a></li><div class="ghead">Architecture options</div><li><a href="#arch-single">Single node (RHEL)</a></li><li><a href="#arch-ha">Enterprise HA (RHEL)</a></li><li><a href="#arch-ocp">On OpenShift</a></li><div class="ghead">Scenario A — one shared AAP</div><li><a href="#scen-a">Design and topology</a></li><li><a href="#scen-a-walk">Walkthrough: see it</a></li><li><a href="#scen-a-work">Real workloads</a></li><li><a href="#scen-a-hub">Private content (hub)</a></li><li><a href="#scen-a-eda">Event-driven (EDA)</a></li><li><a href="#scen-a-shared">Shared inventory</a></li><div class="ghead">Scenario B — own AAP per team</div><li><a href="#scen-b">Design and topology</a></li><li><a href="#scen-b-valid">Validation</a></li><div class="ghead">Decide and reproduce</div><li><a href="#credentials">Where credentials live</a></li><li><a href="#isolation">Isolation review</a></li><li><a href="#compare">Compare and choose</a></li><li><a href="#reproduce">How it was built</a></li>
+    <div class="ghead">Understand AAP</div><li><a href="#what-is-aap">What is AAP</a></li><li><a href="#rbac">How RBAC works</a></li><div class="ghead">Architecture options</div><li><a href="#arch-single">Single node (RHEL)</a></li><li><a href="#arch-ha">Enterprise HA (RHEL)</a></li><li><a href="#arch-ocp">On OpenShift</a></li><li><a href="#external-prereqs">External prerequisites</a></li><div class="ghead">Scenario A — one shared AAP</div><li><a href="#scen-a">Design and topology</a></li><li><a href="#scen-a-walk">Walkthrough: see it</a></li><li><a href="#scen-a-work">Real workloads</a></li><li><a href="#scen-a-hub">Private content (hub)</a></li><li><a href="#scen-a-eda">Event-driven (EDA)</a></li><li><a href="#scen-a-shared">Shared inventory</a></li><div class="ghead">Scenario B — own AAP per team</div><li><a href="#scen-b">Design and topology</a></li><li><a href="#scen-b-valid">Validation</a></li><div class="ghead">Decide and reproduce</div><li><a href="#credentials">Where credentials live</a></li><li><a href="#isolation">Isolation review</a></li><li><a href="#compare">Compare and choose</a></li><li><a href="#reproduce">How it was built</a></li>
   </ul>
 </nav>
 <main>
@@ -542,6 +542,59 @@ example <code>spec.controller.web.replicas: 2</code> or
 reconciles it — that is the practical difference from the RHEL picture, where adding capacity
 means running the installer with a bigger inventory.</p>
 <div class="hint"><span class="hb">Roadmap</span> Roadmap, not validated here: <strong>Automation Orchestrator</strong> — an announced add-on (technology preview alongside AAP 2.7, GA expected Q3 2026) for designing multi-mode workflows that chain task-based, event-driven and AI-driven automation under one governance layer. Red Hat has not published its platform requirements yet; like the self-service portal it is expected OpenShift-first, so treat it as another point for this column when evaluating.</div>
+</section><section class="step" id="external-prereqs"><h2>External prerequisites: database, Redis, subscription</h2>
+<p>Anything beyond a single node brings external dependencies. This section is the reference for
+what the platform actually requires — taken from the installer's own preflight checks and the
+operators' code wherever possible, not from marketing text.</p>
+
+<h3>External PostgreSQL</h3>
+<table>
+<tr><th>Requirement</th><th>RHEL (containerized)</th><th>OpenShift (operator)</th></tr>
+<tr><td>Version</td><td><strong>15 or newer</strong> — the installer preflight refuses anything older ("must be higher than or equal to 15")</td><td>operator default is PostgreSQL 15; newer versions supported as an external database only</td></tr>
+<tr><td>Layout</td><td colspan="2">one database per component (gateway, controller, hub, EDA, metrics on RHEL), each with its own user — never one shared database</td></tr>
+<tr><td>Admin access at install</td><td><code>postgresql_admin_username/password</code> are mandatory with an external DB — the installer creates the databases and enables extensions with them</td><td>databases and users are prepared by the customer; the operator only consumes them</td></tr>
+<tr><td>Extensions</td><td colspan="2">the hub database needs <strong>hstore</strong> (the RHEL installer enables it via the admin credentials — on a locked-down cluster, pre-create it)</td></tr>
+<tr><td>TLS</td><td>per component: <code>*_pg_sslmode</code> (default <code>prefer</code>), optional mutual-TLS cert auth (<code>*_pg_cert_auth</code>)</td><td><code>sslmode</code> field in the connection secret</td></tr>
+<tr><td>Connections</td><td colspan="2">plan for <code>max_connections >= 1024</code> — that is what the platform's own managed database ships with</td></tr>
+<tr><td>How it is wired</td><td><code>*_pg_host/port/username/password</code> per component in the installer inventory</td><td>one Kubernetes Secret per component with <code>host, port, database, username, password, sslmode, target_session_attrs: read-write, type: unmanaged</code>, referenced as <code>postgres_configuration_secret</code></td></tr>
+</table>
+<p><strong>Example reference design (RHEL enterprise):</strong> a 3-node PostgreSQL 15 cluster
+(one primary, two replicas — Patroni or a cloud/managed equivalent) behind a single write endpoint
+(HAProxy or VIP). The platform must always talk to the <em>primary</em>; on OpenShift that is what
+<code>target_session_attrs: read-write</code> guarantees. Size the DB nodes like platform nodes
+(4 vCPU / 16 GB) with fast disks; the database is the one component whose loss stops everything,
+which is why it is customer-managed HA rather than an AAP component.</p>
+
+<h3>External Redis</h3>
+<table>
+<tr><th>Requirement</th><th>RHEL (containerized)</th><th>OpenShift (operator)</th></tr>
+<tr><td>Who needs it</td><td colspan="2">the platform gateway and EDA (sessions, cache, event handling); controller and hub do not use the central Redis</td></tr>
+<tr><td>Modes</td><td><code>redis_mode: cluster</code> (default) or <code>standalone</code>; cluster mode preflight <strong>requires at least 6 nodes</strong> in the [redis] inventory group (3 primaries + 3 replicas)</td><td>operator-managed Redis pods — no external Redis to build</td></tr>
+<tr><td>Network / auth</td><td>port 6379 (configurable), optional password, optional TLS (<code>redis_tls_cert/key</code>)</td><td>internal to the cluster</td></tr>
+</table>
+<p><strong>Example reference design (RHEL enterprise):</strong> six small RHEL VMs (2 vCPU / 4 GB
+each) running Redis in cluster mode, three primaries with one replica each, TLS on, listed in the
+installer's [redis] group — the installer configures the cluster itself. A single-node
+(standalone) Redis is fine wherever the gateway layer itself is not redundant.</p>
+
+<h3>Subscription</h3>
+<ul>
+<li><strong>Sold per managed node</strong>, as an annual subscription, typically in 100-node packs,
+with Standard and Premium support tiers.</li>
+<li>A <strong>managed node</strong> is anything the platform automates — counted once by hostname,
+history-based (see the counting note in Compare and choose; validated live in this lab).</li>
+<li><strong>The platform's own machines are not "managed nodes"</strong> — the subscription
+includes RHEL entitlements for running the AAP infrastructure itself (the infrastructure
+subscription carries 10 RHEL instances for exactly this). But beware the subtle case we hit
+live: the moment you AUTOMATE your own platform nodes (as our shared-fleet demo briefly did),
+they enter the managed-node count like any other host.</li>
+<li>Installation needs a <strong>subscription manifest</strong> (or Red Hat account login) to
+license the platform — this lab used a manifest zip in <code>secrets/</code>.</li>
+<li>On OpenShift, the AAP subscription covers AAP; <strong>the OpenShift cluster is licensed
+separately</strong>. On RHEL, the included entitlements mean the platform VMs need no separate
+RHEL subscriptions.</li>
+</ul>
+<div class="hint"><span class="hb">Good to know</span> The strongest requirements above are quoted from the installer's own preflight assertions (PostgreSQL >= 15; at least 6 Redis nodes for cluster mode; admin DB credentials mandatory) — the code that will actually stop your install, not just documentation prose.</div>
 </section><section class="step" id="scen-a"><h2>Scenario A: two teams share one AAP</h2>
 <div class="callout">
 <strong>The situation:</strong> two teams with totally separate work. They share nothing except the
