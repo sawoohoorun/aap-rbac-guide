@@ -62,7 +62,7 @@ footer{color:var(--mut);font-size:.85rem;border-top:1px solid var(--line);margin
     <h1>Architecture, RBAC and<br>Multi-Team Scenarios</h1>
   </div>
   <ul>
-    <div class="ghead">Understand AAP</div><li><a href="#what-is-aap">What is AAP</a></li><li><a href="#rbac">How RBAC works</a></li><div class="ghead">Architecture options</div><li><a href="#arch-single">Single node (RHEL)</a></li><li><a href="#arch-ha">Enterprise HA (RHEL)</a></li><li><a href="#arch-ocp">On OpenShift</a></li><div class="ghead">Scenario A — one shared AAP</div><li><a href="#scen-a">Design and topology</a></li><li><a href="#scen-a-walk">Walkthrough: see it</a></li><li><a href="#scen-a-work">Real workloads</a></li><li><a href="#scen-a-hub">Private content (hub)</a></li><li><a href="#scen-a-eda">Event-driven (EDA)</a></li><li><a href="#scen-a-shared">Shared inventory</a></li><div class="ghead">Scenario B — own AAP per team</div><li><a href="#scen-b">Design and topology</a></li><li><a href="#scen-b-valid">Validation</a></li><div class="ghead">Decide and reproduce</div><li><a href="#credentials">Where credentials live</a></li><li><a href="#compare">Compare and choose</a></li><li><a href="#reproduce">How it was built</a></li>
+    <div class="ghead">Understand AAP</div><li><a href="#what-is-aap">What is AAP</a></li><li><a href="#rbac">How RBAC works</a></li><div class="ghead">Architecture options</div><li><a href="#arch-single">Single node (RHEL)</a></li><li><a href="#arch-ha">Enterprise HA (RHEL)</a></li><li><a href="#arch-ocp">On OpenShift</a></li><div class="ghead">Scenario A — one shared AAP</div><li><a href="#scen-a">Design and topology</a></li><li><a href="#scen-a-walk">Walkthrough: see it</a></li><li><a href="#scen-a-work">Real workloads</a></li><li><a href="#scen-a-hub">Private content (hub)</a></li><li><a href="#scen-a-eda">Event-driven (EDA)</a></li><li><a href="#scen-a-shared">Shared inventory</a></li><div class="ghead">Scenario B — own AAP per team</div><li><a href="#scen-b">Design and topology</a></li><li><a href="#scen-b-valid">Validation</a></li><div class="ghead">Decide and reproduce</div><li><a href="#credentials">Where credentials live</a></li><li><a href="#isolation">Isolation review</a></li><li><a href="#compare">Compare and choose</a></li><li><a href="#reproduce">How it was built</a></li>
   </ul>
 </nav>
 <main>
@@ -1118,6 +1118,36 @@ no path at all — one of the strongest real arguments for scenario B under hard
 copies, rotated independently.</li>
 </ul>
 <div class="hint"><span class="hb">Rule of thumb</span> If a credential must not even be usable by another team's platform administrator, that is a scenario B requirement. Everything softer is handled by scenario A's org-scoped model.</div>
+</section><section class="step" id="isolation"><h2>Isolation review: every layer, every content type</h2>
+<p>Different parts of the platform isolate differently — some by organization, some by repository
+or namespace, some physically. This matrix reviews <strong>every layer of the shared platform</strong>
+and what another tenant can actually see or do, each row checked live:</p>
+<table>
+<tr><th>Layer / content type</th><th>Isolation mechanism</th><th>What the OTHER tenant sees / can do</th><th>Validated</th></tr>
+<tr><td>Organizations, teams, users (gateway)</td><td>org membership</td><td>only its own org, own team, own users (plus the platform admin account)</td><td class="ok">yes — listed as tenant-b-user1</td></tr>
+<tr><td>Projects, job templates, workflows, credentials, own inventories (controller)</td><td>organization</td><td>nothing listed; direct request by id answered 403</td><td class="ok">yes — every validate.yml run</td></tr>
+<tr><td>Job history and output</td><td>organization</td><td>only its own jobs</td><td class="ok">yes — job list checked per tenant</td></tr>
+<tr><td>Shared fleet inventory</td><td>deliberate cross-org grant, per-team role level</td><td>both teams use it by design; consumer's edit gets 403; owner may edit</td><td class="ok">yes — fleet-owner scenario</td></tr>
+<tr><td>Instance groups + execution nodes</td><td>org binding + job template pinning</td><td>its jobs can never run on the other team's node</td><td class="ok">yes — every job's execution_node checked</td></tr>
+<tr><td>Execution environment OBJECTS (controller)</td><td>organization</td><td>only its own EE plus the platform defaults</td><td class="ok">yes — listed as tenant-b</td></tr>
+<tr><td>Execution environment IMAGES (hub registry)</td><td>container namespace RBAC + private repo flag</td><td>cannot pull (registry refuses); repo name still listed</td><td class="ok">yes — podman pull denied cross-tenant, allowed for owner</td></tr>
+<tr><td>Collections (hub content)</td><td>repository RBAC (private repository)</td><td>search returns nothing; repo API answers 403</td><td class="ok">yes — both directions</td></tr>
+<tr><td>Collection namespaces (hub)</td><td>publish rights on the namespace</td><td>can see the NAME; upload/modify/approve all 403</td><td class="ok">yes — attempted as tenant-b</td></tr>
+<tr><td>Git repositories (Gitea)</td><td>private repo per tenant + scoped token</td><td>404 with its own token, even for clone</td><td class="ok">yes</td></tr>
+<tr><td>EDA (projects, activations, decision environments, credentials)</td><td>organization</td><td>zero objects visible</td><td class="ok">yes — listed as tenant-a</td></tr>
+<tr><td>Stored secrets (all credential types)</td><td>write-only storage</td><td>nobody — not even the owner or admin — can read a stored secret back</td><td class="ok">platform design</td></tr>
+</table>
+<p>Two honest footnotes from the review:</p>
+<ul>
+<li><strong>Names can be more visible than content.</strong> Hub collection namespaces and EE repo
+names are listable by any authenticated user even when the content itself is fully walled
+(publishing, pulling and reading all denied). If even the names are sensitive, that is a
+scenario B argument.</li>
+<li><strong>Hub content needed explicit hardening.</strong> Unlike controller and EDA resources,
+hub content is repository/namespace-scoped, not org-scoped — collections and EE images were
+readable platform-wide by default and are private per tenant only because this model configures
+it (private repositories + container namespace roles, both as code).</li>
+</ul>
 </section><section class="step" id="compare"><h2>Which setup fits which situation</h2>
 <h3>First choice: how to run the platform itself</h3>
 <table>
