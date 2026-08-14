@@ -1206,7 +1206,7 @@ and what another tenant can actually see or do, each row checked live:</p>
 <tr><td>Shared fleet inventory</td><td>deliberate cross-org grant, per-team role level</td><td>both teams use it by design; consumer's edit gets 403; owner may edit</td><td class="ok">yes — fleet-owner scenario</td></tr>
 <tr><td>Instance groups + execution nodes</td><td>org binding + job template pinning</td><td>its jobs can never run on the other team's node</td><td class="ok">yes — every job's execution_node checked</td></tr>
 <tr><td>Execution environment OBJECTS (controller)</td><td>organization</td><td>only its own EE plus the platform defaults</td><td class="ok">yes — listed as tenant-b</td></tr>
-<tr><td>Execution environment IMAGES (hub registry)</td><td>container namespace RBAC + private repo flag</td><td>cannot pull (registry refuses); repo name still listed</td><td class="ok">yes — podman pull denied cross-tenant, allowed for owner</td></tr>
+<tr><td>Execution environment IMAGES (hub registry)</td><td>container namespace RBAC + private repo flag</td><td>cannot pull, push or manage (all denied); the repo NAME and metadata still appear in hub listings — verified to persist even with zero permissions, an AAP 2.7 hub behavior, not a configuration gap</td><td class="ok">yes — podman pull denied cross-tenant, allowed for owner; permission audit clean</td></tr>
 <tr><td>Collections (hub content)</td><td>repository RBAC (private repository)</td><td>search returns nothing; repo API answers 403</td><td class="ok">yes — both directions</td></tr>
 <tr><td>Collection namespaces (hub)</td><td>publish rights on the namespace</td><td>can see the NAME; upload/modify/approve all 403</td><td class="ok">yes — attempted as tenant-b</td></tr>
 <tr><td>Git repositories (Gitea)</td><td>private repo per tenant + scoped token</td><td>404 with its own token, even for clone</td><td class="ok">yes</td></tr>
@@ -1217,8 +1217,13 @@ and what another tenant can actually see or do, each row checked live:</p>
 <ul>
 <li><strong>Names can be more visible than content.</strong> Hub collection namespaces and EE repo
 names are listable by any authenticated user even when the content itself is fully walled
-(publishing, pulling and reading all denied). If even the names are sensitive, that is a
-scenario B argument.</li>
+(publishing, pulling and reading all denied). We verified this is platform behavior, not a missing
+grant: a user with zero permissions on a private EE repo still sees its name in the hub listing
+(while my_permissions, pull and push are all denied). Note the tenant's day-to-day view is
+unaffected — controller-side EE objects ARE org-scoped, so tenant-a's Automation Execution pages
+never show tenant-b-ee; only the shared hub content pages reveal names. If even names are
+sensitive, the remedy is scenario B: team-b's own platform has its own hub, where tenant-a cannot
+see anything at all.</li>
 <li><strong>Hub content needed explicit hardening.</strong> Unlike controller and EDA resources,
 hub content is repository/namespace-scoped, not org-scoped — collections and EE images were
 readable platform-wide by default and are private per tenant only because this model configures
